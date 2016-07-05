@@ -159,11 +159,15 @@ mldist_pop_list_dt <- mapply(function(x,y){
 }, x=mldist_pop_list_dt,y=mldist_1pop_id_list_dt, SIMPLIFY = FALSE)
 
 mldist_pop_list_dt <- lapply(mldist_pop_list_dt, function(y){
-  setkey(y, id)
+  y[,id1:=paste0(gene,"_",pop)]
 })
 
 mldist_pop_list_dt <- lapply(mldist_pop_list_dt, function(y){
-  y[, .SD[1,], by=id]
+  setkey(y, id1)
+})
+
+mldist_pop_list_dt <- lapply(mldist_pop_list_dt, function(y){
+  y[, .SD[1,], by=id1]
 })
 
 mldist_pop_list <- lapply(mldist_pop_list_dt, function(y){
