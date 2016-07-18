@@ -1,5 +1,3 @@
-# the scripts repository is being updated
-
 # korffgroup
 Maria von Korff group (MPIPZ / HHU / CEPLAS) script repository
 
