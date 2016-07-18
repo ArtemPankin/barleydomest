@@ -1,0 +1,82 @@
+#BSUB -q multicore20 
+#BSUB -J my_job[1-95]
+#BSUB -n 2 
+#BSUB -R span[hosts=1]
+#BSUB -o output_genotyping.txt
+#BSUB -M 6000
+#BSUB -R rusage[mem=4000] 
+
+if [ $4 = "unfiltered" ]; then	
+
+
+	name=`sed -n "${LSB_JOBINDEX}"p $2 | sed 's:\_1:\_filtered:g'`
+	
+	sampleID=`echo $name | sed 's:.*\/::g' | sed 's:\.fq::g'`
+
+	path=`echo $name | sed "s:\(.*\)\/.*:\1/:"`
+
+else
+
+	name=`sed -n "$LSB_JOBINDEX"p $2`	
+
+	sampleID=`echo $name | sed 's:.*\/::g' | sed 's:\.fq::g'`
+
+	path=`echo $name | sed "s:\(.*\)\/.*:\1/:"`
+
+fi
+
+
+if [ $8 = "correction" ]; then
+
+	sampleID=${sampleID}.cor
+
+fi
+
+if [ ! $5 = "none" ]; then
+
+	sampleID=${sampleID}.trimmed
+
+fi
+
+
+if [ ! -s unfiltered.${sampleID}.UG.genotyping.$num.vcf.idx ]; then
+
+
+# genotyping to get calls for reference and non-reference sites
+
+	java -Xmx4g -jar GenomeAnalysisTK.jar -R $1 -T UnifiedGenotyper -glm BOTH --genotyping_mode GENOTYPE_GIVEN_ALLELES --alleles $9 --output_mode EMIT_ALL_SITES -o unfiltered.${sampleID}.UG.genotyping.$num.vcf -I ${sampleID}.readgroups.realigned.bam -pcr_error 5.0E-2
+
+fi
+
+
+if [ ! -s ${sampleID}.INDEL.homo_het.UG.genotyping.DP10.pcrerr-5e-2.$num.vcf.idx ]; then
+ 
+# filtering INDELs from GENOTYPING mode (with 0/0 genotypes); hom + het
+
+	java -Xmx4g -jar GenomeAnalysisTK.jar -R $1 -T SelectVariants --variant unfiltered.${sampleID}.UG.genotyping.$num.vcf --restrictAllelesTo BIALLELIC -selectType INDEL -select 'DP > 10 && FS < 200.0 && ReadPosRankSum > -10.0' -o ${sampleID}.INDEL.homo_het.UG.genotyping.DP10.pcrerr-5e-2.$num.vcf
+
+fi
+
+if [ ! -s ${sampleID}.SNP.homo_het.UG.genotyping.DP8.pcrerr-5e-2.$num.vcf.idx ]; then
+
+# filtering SNPs from GENOTYPING mode (with 0/0 genotypes); hom + het
+
+	java -Xmx4g -jar GenomeAnalysisTK.jar -R $1 -T SelectVariants --variant unfiltered.${sampleID}.UG.genotyping.$num.vcf --restrictAllelesTo BIALLELIC -selectType SNP -select 'DP > 8 && FS < 60.0 && MQ > 20.0' -o ${sampleID}.SNP.homo_het.UG.genotyping.DP8.pcrerr-5e-2.$num.vcf
+
+fi
+
+if [ ! -s ${sampleID}.INDEL.homo.UG.genotyping.DP10.pcrerr-5e-2.$num.vcf ]; then
+ 
+# filtering INDELs from GENOTYPING mode (with 0/0 genotypes); only hom
+
+	grep -v "AC\=1" ${sampleID}.INDEL.homo_het.UG.genotyping.DP10.pcrerr-5e-2.$num.vcf > ${sampleID}.INDEL.homo.UG.genotyping.DP10.pcrerr-5e-2.$num.vcf
+
+fi
+
+if [ ! -s ${sampleID}.SNP.homo.UG.genotyping.DP8.pcrerr-5e-2.$num.vcf ]; then
+
+# filtering SNPs from GENOTYPING mode (with 0/0 genotypes); only hom
+
+	grep -v "AC\=1" ${sampleID}.SNP.homo_het.UG.genotyping.DP8.pcrerr-5e-2.$num.vcf > ${sampleID}.SNP.homo.UG.genotyping.DP8.pcrerr-5e-2.$num.vcf
+
+fi

@@ -1,4 +1,4 @@
-#### This script generates Fig. !!! 
+#### This script generates Fig. 2de2de 
 ####
 
 ## set number of populations K
@@ -185,6 +185,10 @@ mldist_pop_list[[i]][,6] <- factor(mldist_pop_list[[i]][,6], levels = sort(uniqu
 mldist_pop_list[[i]]
 }) # closing lapply
 
+
+
+## Figure 3e and Supplementary Figure 15; plot barplots for each value of K, unique population hits
+
 ##  plots for each value of K
 
 plots <- lapply(seq_along(mldist_pop_list), function(i){
@@ -203,7 +207,7 @@ lapply(seq_along(plots), function(x){
 ## END plot barplots; unique population hits
 
 
-## Fig_S!!! histogram - number of hits wild populations / domesticated gene
+## Supplementary Figure 13; histogram - number of hits wild populations / domesticated gene
 
 gene_pop_hits <- ddply(mldist_pop_list[[8]], c("gene"), function(x){
   length(unique(x$pop))
@@ -216,7 +220,7 @@ ggplot(gene_pop_hits) +
 
 ### END MODULE: histogram - number of hits wild populations / domesticated gene
 
-## Fig_S!!!! plot for each genotype separately, only K9
+## Supplementary Figure 14; plot for each genotype separately, only K9
 
 ggplot(mldist_pop_list[[8]][,c(1,2,6)],aes(x=1)) +
   geom_bar(aes(y=(..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..], fill=pop)) +

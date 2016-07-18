@@ -1,0 +1,198 @@
+#BSUB -q multicore20 
+#BSUB -J my_job[1-95]
+#BSUB -n 4
+#BSUB -R span[hosts=1]
+#BSUB -o output_mapping.txt
+#BSUB -R rusage[mem=4000]
+#BSUB -M 7000
+
+
+# ~~~~~~~~~~~~~~~~READ FILTERING~~~~~~~~~~~~~~~~~
+
+if [ $4 = "unfiltered" ]; then	
+
+
+	name=`sed -n "${LSB_JOBINDEX}"p $2 | sed 's:\_1:\_filtered:g'`
+	
+	sampleID=`echo $name | sed 's:.*\/::g' | sed 's:\.fq::g'`
+
+	path=`echo $name | sed "s:\(.*\)\/.*:\1/:"`
+
+if [ ! -s ${name} ]; then
+
+
+# performing cd-hit-dupl filtering to remove duplicate reads.
+
+
+	cd-hit-dup -i ${name%%_filtered.fq}_1.fq -o ${name%%_filtered.fq}_1_cdhit
+
+	cd-hit-dup -i ${name%%_filtered.fq}_2.fq -o ${name%%_filtered.fq}_2_cdhit
+
+
+	rm ${name%%_filtered.fq}*.clstr
+
+
+# Merge all fastq files belonging to the same library into a single file. Place them in the working directory.
+
+	cat ${name%%_filtered.fq}_1_cdhit ${name%%_filtered.fq}_2_cdhit > ${name%%_filtered.fq}.merged_cdhit
+
+
+# performing quality filtering; Based on the results of 'fastqc' adjust parameters for the fastx_trimmer "-f" (first base to keep) and "-l" (last base to keep)
+
+ 	cat ${name%%_filtered.fq}.merged_cdhit | fastx_trimmer -f $6 -l $7 -Q33 | fastx_clipper -Q33 -l 30 -a GATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT | fastx_clipper -Q33 -l 30 -a GATCGGAAGAGCACACGTCTGAACTCCAGTCAC | fastx_artifacts_filter -Q33 > ${name%%_filtered.fq}.merged_cdhit_filtered
+
+# substitutes blanks with ":" to attach read-end index to the read name (CHECK WHETHER THIS IS NECESSARY FOR SINGLE-END READS)
+
+ 	sed "s/ /:/g" ${name%%_filtered.fq}.merged_cdhit_filtered > ${name}
+ 	
+	rm ${name%%_filtered.fq}.merged_cdhit_filtered
+	
+	rm ${name%%_filtered.fq}.merged_cdhit
+
+	rm ${name%%_filtered.fq}_1_cdhit
+
+	rm ${name%%_filtered.fq}_2_cdhit 
+
+fi
+
+else
+
+# setting variable for sampleID
+
+	name=`sed -n "$LSB_JOBINDEX"p $2`	
+
+	sampleID=`echo $name | sed 's:.*\/::g' | sed 's:\.fq::g'`
+
+	path=`echo $name | sed "s:\(.*\)\/.*:\1/:"`
+
+fi
+
+
+# ~~~~~~~~~~~~~LIGHTER error correction module~~~~~~~~~~~~
+
+
+if [ $8 = "correction" ]; then
+
+if [ ! -s ${name%%.fq}.cor.fq ]; then
+
+	lighter -r ${name} -k 23 150000000 0.2 -maxcor 2 -t $3 -od $path
+
+	
+	
+fi
+
+	name=${name%%.fq}.cor.fq
+
+	sampleID=${sampleID}.cor
+
+fi
+
+
+
+# ~~~~~~~~~~~~~~~~~~~~MAPPING module~~~~~~~~~~~~~~~~~~~~~
+
+if [ ! $5 = "none" ]; then
+
+
+if [ ! -s ${sampleID}.bam -a ! -s ${sampleID}.trimmed.readgroups.realigned.bam ]; then
+
+
+	bwa aln -n 0.05 -o 2 -e 12 -t $3 -f ${sampleID}.sai $1 $name
+
+	bwa samse -f ${sampleID}.sam $1 ${sampleID}.sai $name
+
+	samtools view -S -q 1 -F 4 ${sampleID}.sam | samtools view -bt $1.fai - | samtools sort - ${sampleID}
+
+	samtools index ${sampleID}.bam
+
+fi
+
+else
+
+
+if [ ! -s ${sampleID}.bam -a ! -s ${sampleID}.readgroups.realigned.bam ]; then
+
+
+	bwa aln -n 0.05 -o 2 -e 12 -t $3 -f ${sampleID}.sai $1 $name
+
+	bwa samse -f ${sampleID}.sam $1 ${sampleID}.sai $name
+
+	samtools view -S -q 1 -F 4 ${sampleID}.sam | samtools view -bt $1.fai - | samtools sort - ${sampleID}
+
+	samtools index ${sampleID}.bam
+
+fi
+
+fi
+
+if [ ! $5 = "none" ]; then
+
+if [ ! -s ${sampleID}.trimmed.bam -a ! -s ${sampleID}.trimmed.readgroups.realigned.bam ]; then
+
+# extracting bam files with cDNA and gDNA matching reads
+
+	intersectBed -abam ${sampleID}.bam -b $5 > ${sampleID}.mrna.temp
+
+	intersectBed -abam ${sampleID}.bam -b $5 -v > ${sampleID}.gdna.temp.bam
+
+	bamToFastq -i ${sampleID}.mrna.temp -fq ${sampleID}.mrna.temp.fq
+
+# trimming 14 bp from cDNA mapped reads
+
+	cat ${sampleID}.mrna.temp.fq | fastx_trimmer -f 15 -Q33 | fastx_reverse_complement -Q33 | fastx_trimmer -f 15 -Q33 > ${sampleID}.trimmed.mrna.temp.fq
+
+# mapping trimmed cDNA reads
+	
+	bwa aln -n 0.05 -o 2 -e 12 -t $3 -f ${sampleID}.trimmed.mrna.temp.sai $1 ${sampleID}.trimmed.mrna.temp.fq
+
+	bwa samse -f ${sampleID}.trimmed.mrna.temp.sam $1 ${sampleID}.trimmed.mrna.temp.sai ${sampleID}.trimmed.mrna.temp.fq
+
+# filtering, converting to bam and sorting
+
+	samtools view -S -q 1 -F 4 ${sampleID}.trimmed.mrna.temp.sam | samtools view -bt $1.fai - | samtools sort - ${sampleID}.trimmed.mrna.temp
+
+# merging gDNA and trimmed cDNA bams
+
+	samtools merge -f ${sampleID}.trimmed.bam ${sampleID}.gdna.temp.bam ${sampleID}.trimmed.mrna.temp.bam
+
+# indexing bam (necessary for IGV browser)
+
+	samtools index ${sampleID}.trimmed.bam
+
+fi
+
+
+sampleID=${sampleID}.trimmed
+
+fi
+
+# moving files to the folders; UPDATE: removing .temp, sam and sai files
+	
+rm ${sampleID}*temp* archive_files/
+rm ${sampleID}.sam archive_files/
+rm ${sampleID}.sai archive_files/
+
+
+# ~~~~~~~~~~~~~~~~~SNP calling module~~~~~~~~~~~~~~~~~~~~~~~~
+
+# PREPARING BAM FILES FOR GATK
+
+if [ ! -s ${sampleID}.readgroups.realigned.bam ]; then 
+	
+	java -Xmx10g -jar AddOrReplaceReadGroups.jar INPUT=${sampleID}.bam OUTPUT=${sampleID}.readgroups.bam RGLB=${sampleID}_lib RGPL=Illumina RGPU=run RGSM=${sampleID} VALIDATION_STRINGENCY=LENIENT
+
+	samtools index ${sampleID}.readgroups.bam
+
+	java -Xmx10g -jar GenomeAnalysisTK.jar -T RealignerTargetCreator -R $1 -nt 6 -I ${sampleID}.readgroups.bam -o ${sampleID}.readgroups.intervals
+
+	java -Xmx10g -jar GenomeAnalysisTK.jar -T IndelRealigner -R $1 -I ${sampleID}.readgroups.bam -targetIntervals ${sampleID}.readgroups.intervals -o ${sampleID}.readgroups.realigned.bam --filter_mismatching_base_and_quals
+	
+fi
+
+# SNP calling, each genotype separately
+
+if [ ! -s ${sampleID}.UG.raw.vcf.idx ]; then
+
+	java -Xmx10g -jar GenomeAnalysisTK.jar -T UnifiedGenotyper -R $1 -glm BOTH -o ${sampleID}.UG.raw.vcf -nct $3 -I ${sampleID}.readgroups.realigned.bam
+
+fi
