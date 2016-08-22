@@ -1,15 +1,29 @@
 ## BASH script
-## read filterring, mapping and SNP calling and filtering pipeline
-## a number of software tools should be in the bin path
-## SOFTWARE: samtools, bwa, GATK, cd-hit-dup, lighter, intersectBed, bamToFastq, AddOrReplaceReadGroups.jar, 
-## dependent BSUB scripts 'filt_map_snp.bsub', 'genotyping.bsub' should be in the same folder
+
+## This script performs Illumina read filtering, mapping and SNP calling and filtering
+
+## The following SOFTWARE should be in the 'bin' path: samtools, bwa, GATK, cd-hit-dup, lighter, intersectBed, bamToFastq, AddOrReplaceReadGroups.jar, 
+## The script requires two dependent BSUB scripts 'filt_map_snp.bsub', 'genotyping.bsub'. They should be placed in the same folder
 ## we recommend reserving memory for this script (~ 80 Gb in out case)
-## arguments to submit the script (in this particular order)
-# $1 - reference (.fa) $2 - list of fastq files/one file name per line, no extra characters/FULL_PATH $3 - number of cores $4 - dataset type,i.e. filtered or unfiltered ('filtered' - omits filtering steps; 'unfiltered' - proceeds with filtering) $5 - cDNA coordinates in bed format $6 - first base to keep in bp, based on FASTQC results $7 - last base to keep in bp, based on FASTQC results $8 - error correction by lighter (correction/nocorrection) $9 - skip_mapping/skip_genotyping(optional)
+
+## The script should be started in with the eight compulsory arguments: 
+## bash read_mapping_snp_calling.sh /
+## $1 - reference_file (.fa) / 
+## $2 - list_of_fastq files (one file name per line, no extra characters/FULL_PATH) /
+## $3 - number of cores for multicore processing /
+## $4 - dataset type filtered/unfiltered ('filtered' - omits filtering steps; 'unfiltered' - proceeds with filtering) /
+## $5 - coordinates of the cDNA reference in bed format /
+## $6 - first base to keep in bp, based on the FASTQC results / 
+## $7 - last base to keep in bp, based on the FASTQC results /
+## $8 - error correction by Lighter software (correction/nocorrection) /
+## $9 - skip_mapping/skip_genotyping(optional)
+
+## Example command:
+## bash read_mapping_snp_calling.sh reference_genome_23408contigs.fa read_files.list 8 unfiltered cDNA_coordinates.bed 5 90 correction
+
 ## The script is using BSUB LSF system for parallel computing
 
 #!/bin/sh
-
 
 # counts number of fastq files to process
 
