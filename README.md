@@ -1,6 +1,6 @@
 ## Maria von Korff group (MPIPZ / HHU / CEPLAS) script repository
 
-# MODULE 1 (2 files) extracting putative ancestry of the domesticated genes using the Maxumum Likelihood distance approach
+**MODULE 1 (2 files) extracting putative ancestry of the domesticated genes using the Maxumum Likelihood distance approach**
 
 1. run gene_ancestry_raxml.sh bash script
 2. use output of the bash script in gene_ancestry.R
@@ -8,7 +8,7 @@
 *Generates figures Fig. 2de*
 
 
-# MODULE 2 (3 files): read filtering, mapping, SNP calling and filtering; parallelized pipeline (bsub LSF)
+**MODULE 2 (3 files): read filtering, mapping, SNP calling and filtering; parallelized pipeline (bsub LSF)**
 
 Starting script:
 read_mapping_snp_calling.sh
@@ -26,7 +26,7 @@ sfs_angsd_vs_vcf.R - R script to plot and compare sfs spectra
 *Generates figure 1d*
 
 
-# ADDITIONAL FILES
+**ADDITIONAL FILES**
 
 reference_genome_23408contigs.fa - reference genome for the read mapping
 
