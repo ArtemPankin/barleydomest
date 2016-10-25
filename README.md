@@ -1,14 +1,14 @@
 ## Maria von Korff group (MPIPZ / HHU / CEPLAS) script repository
 
-
-### MODULE (2 files) extracting putative ancestry of the domesticated genes using the Maxumum Likelihood distance approach
+## MODULE 1 (2 files) extracting putative ancestry of the domesticated genes using the Maxumum Likelihood distance approach
 
 1. run gene_ancestry_raxml.sh bash script
 2. use output of the bash script in gene_ancestry.R
 
-Generates figures Fig. 2de
+*Generates figures Fig. 2de*
 
-### MODULE (3 files): read filtering, mapping & SNP calling and filtering
+
+## MODULE 2 (3 files): read filtering, mapping, SNP calling and filtering; parallelized pipeline (bsub LFS)
 
 Starting script:
 read_mapping_snp_calling.sh
@@ -17,7 +17,16 @@ Companion scripts should be in the folder, bsub LSF system required:
 filt_map_snp.bsub
 genotyping.bsub
 
-### ADDITIONAL FILES
+
+## MODULE 3: calculating site frequency spectra (sfs) - a.k.a. minor allele frequency (MAF) - using two methods - based on SNP genotypes in a vcf file (1) and on raw bam files using angsd (2)
+
+
+sfs_angsd_vs_vcf.R - R script to plot and compare sfs spectra
+
+*Generates figure 1d*
+
+
+## ADDITIONAL FILES
 
 reference_genome_23408contigs.fa - reference genome for the read mapping
 
