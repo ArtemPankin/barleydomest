@@ -18,7 +18,7 @@ filt_map_snp.bsub
 genotyping.bsub
 
 
-# MODULE 3: calculating site frequency spectra (sfs) - a.k.a. minor allele frequency (MAF) - using two methods - based on SNP genotypes in a vcf file (1) and on raw bam files using angsd (2)
+**MODULE 3: calculating site frequency spectra (sfs) - a.k.a. minor allele frequency (MAF) - using two methods - based on SNP genotypes in a vcf file (1) and on raw bam files using angsd (2)**
 
 
 sfs_angsd_vs_vcf.R - R script to plot and compare sfs spectra
