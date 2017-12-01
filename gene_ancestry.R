@@ -209,66 +209,12 @@ mldist_pop_list <- lapply(mldist_pop_list_dt, function(y){
 
 ## END MODULE  select unique population hits
 
-## MODULE: plots
-
 ## set factor levels so that the populations remain in the same order
 
 mldist_pop_list <- lapply(seq_along(mldist_pop_list), function(i){
   mldist_pop_list[[i]][,6] <- factor(mldist_pop_list[[i]][,6], levels = sort(unique(as.character(mldist_pop_list[[i]][,6]))))
   mldist_pop_list[[i]]
-}) # closing lapply
-
-##numwildpop <- ddply(str_datapop[[8]], c("pop"),nrow)
-##wildprop_toplotall <- merge(numpop, numwildpop, by="pop")
-##wildprop_toplotall$count_norm <- wildprop_toplotall[,2] / wildprop_toplotall[,3]
-##sumwild <- sum(wildprop_toplotall$count_norm)
-##wildprop_toplotall$count_norm1 <- wildprop_toplotall$count_norm / sumwild
-
-
-#ggplot(wildprop_toplotall) +
-#  geom_bar(aes(x=1, y=count_norm1, fill =pop), stat="identity") +
-#  scale_fill_manual(values=popcol) +
-#  theme_bw() %+replace% theme(panel.background=element_rect(fill="transparent", colour=NA),legend.position="right", panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.ticks.x=element_blank(),axis.title.y = element_blank(), axis.text.y = element_text(), axis.title.x=element_blank(), axis.text.x = element_blank(), panel.border = element_blank(), axis.line.x = element_blank()) 
-
-
-## Figure 3c and Supplementary Figure 15; plot for each value of K, unique population hits; domestication candidate genes
-
-#  plots for each value of K
-
-outl_plot_pop <- subset(mldist_pop_list[[8]], gene %in% alloutid) # alloutid - all outliers from plot_selection_scans.R script
-
-outl_plot_pop[,6] <- factor(outl_plot_pop[,6], levels = sort(unique(as.character(outl_plot_pop[,6]))))
-
-b <-  ggplot(outl_plot_pop ,aes(x=1)) +
-  geom_bar(aes(y=(..count..)/sum(..count..),  fill=pop)) +
-  scale_fill_manual(values=popcol) +
-  theme_bw() %+replace% theme(panel.background=element_rect(fill="transparent", colour=NA),legend.position="right", panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.ticks.x=element_blank(),axis.title.y = element_blank(), axis.text.y = element_text(), axis.title.x=element_blank(), axis.text.x = element_blank(), panel.border = element_blank(), axis.line.x = element_blank()) 
-
-dev.off()
-pushViewport(viewport(layout = grid.layout(1, 2)))
-print(a, vp = viewport(layout.pos.row = 1, layout.pos.col = 1))
-print(b, vp = viewport(layout.pos.row = 1, layout.pos.col = 2))
-
-
-numpopoutlier <- ddply(outl_plot_pop, c("pop"), nrow)
-
-wildprop_toplotalloutlier <- merge(numpopoutlier, numwildpop, by="pop")
-
-wildprop_toplotalloutlier$count_norm <- wildprop_toplotalloutlier[,2] / wildprop_toplotalloutlier[,3]
-sumwildoutlier <- sum(wildprop_toplotalloutlier$count_norm)
-
-wildprop_toplotalloutlier$count_norm1 <- wildprop_toplotalloutlier$count_norm / sumwild
-
-
-ggplot(wildprop_toplotalloutlier) +
-  geom_bar(aes(x=1, y=count_norm1, fill =pop), stat="identity") +
-  scale_fill_manual(values=popcol) +
-  theme_bw() %+replace% theme(panel.background=element_rect(fill="transparent", colour=NA),legend.position="right", panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.ticks.x=element_blank(),axis.title.y = element_blank(), axis.text.y = element_text(), axis.title.x=element_blank(), axis.text.x = element_blank(), panel.border = element_blank(), axis.line.x = element_blank()) 
-
-
-
-
-## END plot barplots; unique population hits; domestication candidate genes
+}) 
 
 ### MODULE: Figure 4a; plot distribution of ancestral wild haplotypes on a map of the Fertile Crescent
 
@@ -349,7 +295,7 @@ ggplot(data= dat.sub_rev, aes(x=long,y=lat,group=group)) +
   scale_y_continuous(expand = c(0,0)) +
   scale_x_continuous(expand = c(0,0))
 
-### END Figure 4a; plot distribution of ancestral wild haplotypes on a map of the Fertile Crescent
+### END Fig. 4a; plot distribution of ancestral wild haplotypes on a map of the Fertile Crescent
 
 ## MODULE: Fig. 4b - longitudinal distribution of wild ancestral haplotypes
 
@@ -390,6 +336,8 @@ ggplot() +
 
 ## MODULE: Figs. S13, S14 - plot unsorted and sorted ancestry palletes for all domesticated genotypes
 
+## plot unsorted palletes Fig. S13
+
 ggplot(subset(mldist_pop_list[[8]],gene %in% alloutid)[,c(2,6)],aes(x=1)) +
   geom_bar(aes(y=(..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..], fill=pop)) +
   facet_grid(~idd) +
@@ -397,31 +345,112 @@ ggplot(subset(mldist_pop_list[[8]],gene %in% alloutid)[,c(2,6)],aes(x=1)) +
   scale_y_continuous(labels= percent) +
   theme_bw() %+replace% theme(strip.text.x = element_text(size=9,angle=90),strip.background = element_blank(), panel.background=element_rect(fill="transparent", colour=NA),legend.position="right", panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.ticks.x=element_blank(),axis.title.y = element_blank(), axis.text.y = element_text(), axis.title.x=element_blank(), axis.text.x = element_blank(), panel.border = element_blank(), axis.line.x = element_blank())
 
+## plot sorted palettes Fig. S14 (only the loci with with < 20% of unknown ancestry across the accessions)
+
+c <- dcast(mldist_pop_list[[8]][,c(2,5,6)], gene ~ idd)
+
+## sort palettes based on 1st genotype
+
+q <- c[order(c[,2]),]
+
+## calculate % of uknown ancestry across the accessions, select with < 20%
+
+d <- as.data.frame(apply(q,2, function(x){
+  x[is.na(x)] <- "unknown"
+  x
+}))
+
+d$unknown <- apply(d, 1, function(x){
+  sum(str_count(unlist(x),"unknown")) / length(x)
+})
+
+d <- subset(d, unknown < 0.2)
+
+## plot (takes long time!)
+
+dev.off()  
+pushViewport(viewport(layout = grid.layout(nrow(d)+2, ncol(d)-1)))
+
+invisible(lapply(seq(2,ncol(d)), function(y){
+  invisible(lapply(seq(1,nrow(d)), function(x){
+    f <-  d[x,c(1,y)]
+    colnames(f)[2] <- "pop"
+    e <- ggplot(data=f) + geom_rect(aes(xmin=1,xmax=2,ymin=1,ymax=2, fill=factor(pop))) +
+      scale_fill_manual(values=popcol) + blk_theme()
+    print(e, vp = viewport(layout.pos.row = c(x), layout.pos.col = c(y-1)))
+  }))
+}))
+
+## END Figs. S13, S14 - plot unsorted and sorted ancestry palletes for all domesticated genotypes
+
 
 
 ## caclulating jaccard distances between domesticated genotypes & clustering
 
+excl <- c("FT-477","FT-494","FT-492","FT-489","FT-500","FT-478","FT-498","FT-502","FT-483","FT-493","FT-486","FT-488")
 
-# all
-#jacc_matr <- dcast(mldist_pop_list[[8]][,c(2,5,6)], gene ~ idd)
+## neutral loci
 
-jacc_matr <- mldist_pop_list[[8]]
+jacc_matrn <- subset(mldist_pop_list[[8]], ! gene %in% alloutid)
+jacc_matrn$id2 <- paste0(jacc_matrn$gene,"_",jacc_matrn$pop)
+jacc_matrn <- dcast(jacc_matrn[,c(2,5,8)], gene ~ idd) 
+jacc_matrn <- jacc_matrn[, ! colnames(jacc_matrn) %in% excl]
 
-jacc_matr <- d
-
-length(unique(jacc_matr$id))
-
-nrow(jacc_matr)
-jacc_matr$id2 <- paste0(jacc_matr$gene,"_",jacc_matr$pop)
-jacc_matr <- dcast(jacc_matr[,c(2,5,8)], gene ~ idd) 
-
-corr_matr <- sapply(colnames(jacc_matr[,c(2:length(jacc_matr))]), function(y){
-  Y <- apply(jacc_matr[,c(2:length(jacc_matr))], 2, function(x){
-    I <- length(intersect(x,jacc_matr[,y]))-1  
-    J <- I/(length(na.omit(x))+length(na.omit(jacc_matr[,y]))-I)
+corr_matrn <- sapply(colnames(jacc_matrn[,c(2:length(jacc_matrn))]), function(y){
+  Y <- apply(jacc_matrn[,c(2:length(jacc_matrn))], 2, function(x){
+    a <- gsub("_pop[0-9]", "",na.omit(jacc_matrn[,y]))
+    b <- gsub("_pop[0-9]", "",na.omit(x))
+    c <- intersect(a,b)
+    I <- length(intersect(x,jacc_matrn[,y]))-1  
+    J <- I/(length(pmatch(c,na.omit(x)))+length(pmatch(c,na.omit(jacc_matrn[,y])))-I)
     J
   })
 })
+
+
+# domestication loci
+
+jacc_matrd <- subset(mldist_pop_list[[8]], gene %in% alloutid)
+jacc_matrd$id2 <- paste0(jacc_matrd$gene,"_",jacc_matrd$pop)
+jacc_matrd <- dcast(jacc_matrd[,c(2,5,8)], gene ~ idd) 
+jacc_matrd <- jacc_matrd[, ! colnames(jacc_matrd) %in% excl]
+
+corr_matrd <- sapply(colnames(jacc_matrd[,c(2:length(jacc_matrd))]), function(y){
+  Y <- apply(jacc_matrd[,c(2:length(jacc_matrd))], 2, function(x){
+    a <- gsub("_pop[0-9]", "",na.omit(jacc_matrd[,y]))
+    b <- gsub("_pop[0-9]", "",na.omit(x))
+    c <- intersect(a,b)
+    I <- length(intersect(x,jacc_matrd[,y]))-1  
+    J <- I/(length(pmatch(c,na.omit(x)))+length(pmatch(c,na.omit(jacc_matrd[,y])))-I)
+    J
+  })
+})
+
+
+a <- as.vector(corr_matrd)
+b <- as.vector(corr_matrn)
+
+as.numeric(corr_matr)
+
+c <- data.frame(val=as.numeric(as.vector(corr_matrd)), name=rep(c("dom"),length(as.vector(corr_matrd))))
+d <- data.frame(val=as.numeric(as.vector(corr_matrn)), name=rep(c("neutral"),length(as.vector(corr_matrn))))
+
+
+e <- rbind(c,d)     
+
+ggplot(e, aes(x=val)) + geom_density(aes(colour=name, fill=name, y=..scaled..), alpha=.4, size=1, adjust=2) + 
+  geom_vline(xintercept=med_d, colour=c("#D95F02"), linetype="dashed", size=1) +
+  geom_vline(xintercept=med_wd, colour=c("#1B9E77"), linetype="dashed", size=1) +
+  scale_fill_manual(values=c("#D95F02","#1B9E77")) +
+  scale_colour_manual(values=c("#D95F02","#1B9E77")) +
+  theme_bw()
+
+
+
+
+### from hereafter - draft
+
+
 
 corr_matr_dist <- as.dist(corr_matr)
 
@@ -444,22 +473,7 @@ corr_df$id <- row.names(corr_matr)
 
 # END all
 
-# domestication loci
-jacc_matrd <- subset(mldist_pop_list[[8]], gene %in% alloutid)
-jacc_matrd$id2 <- paste0(jacc_matrd$gene,"_",jacc_matrd$pop)
-jacc_matrd <- dcast(jacc_matrd[,c(2,5,8)], gene ~ idd) 
-jacc_matrd <- jacc_matrd[, ! colnames(jacc_matrd) %in% excl]
 
-corr_matrd <- sapply(colnames(jacc_matrd[,c(2:length(jacc_matrd))]), function(y){
-  Y <- apply(jacc_matrd[,c(2:length(jacc_matrd))], 2, function(x){
-    a <- gsub("_pop[0-9]", "",na.omit(jacc_matrd[,y]))
-    b <- gsub("_pop[0-9]", "",na.omit(x))
-    c <- intersect(a,b)
-    I <- length(intersect(x,jacc_matrd[,y]))-1  
-    J <- I/(length(pmatch(c,na.omit(x)))+length(pmatch(c,na.omit(jacc_matrd[,y])))-I)
-    J
-  })
-})
 
 y <- colnames(jacc_matrd[,2:3])[1]
 x <- jacc_matrd[,3]
@@ -467,22 +481,6 @@ x <- jacc_matrd[,3]
 
 
 
-a <- as.vector(corr_matrd)
-b <- as.vector(corr_matrwd)
-
-
-c <- data.frame(val=as.numeric(a), name=rep(c("dom"),length(a)))
-d <- data.frame(val=as.numeric(b), name=rep(c("neutral"),length(a)))
-
-
-e <- rbind(c,d)     
-
-ggplot(e, aes(x=val)) + geom_density(aes(colour=name, fill=name, y=..scaled..), alpha=.4, size=1, adjust=2) + 
-  geom_vline(xintercept=med_d, colour=c("#D95F02"), linetype="dashed", size=1) +
-  geom_vline(xintercept=med_wd, colour=c("#1B9E77"), linetype="dashed", size=1) +
-  scale_fill_manual(values=c("#D95F02","#1B9E77")) +
-  scale_colour_manual(values=c("#D95F02","#1B9E77")) +
-  theme_bw()
 
 
 
@@ -514,8 +512,6 @@ ggplot(data= melt(corr_df), aes(x=id, y = variable, fill=value)) + geom_tile()
 
 # END domestication loci
 
-excl <- c("FT-477","FT-494","FT-492","FT-489","FT-500","FT-478","FT-498","FT-502","FT-483","FT-493","FT-486","FT-488")
-
 # without domestication loci
 jacc_matrwd <- subset(mldist_pop_list[[8]], ! gene %in% alloutid)
 jacc_matrwd$id2 <- paste0(jacc_matrwd$gene,"_",jacc_matrwd$pop)
@@ -527,16 +523,7 @@ jacc_matrwd <- jacc_matrwd[, ! colnames(jacc_matrwd) %in% excl]
 head(jacc_matrwd)
 
 nrow(jacc_matrwd)
-corr_matrwd <- sapply(colnames(jacc_matrwd[,c(2:length(jacc_matrwd))]), function(y){
-  Y <- apply(jacc_matrwd[,c(2:length(jacc_matrwd))], 2, function(x){
-    a <- gsub("_pop[0-9]", "",na.omit(jacc_matrwd[,y]))
-    b <- gsub("_pop[0-9]", "",na.omit(x))
-    c <- intersect(a,b)
-    I <- length(intersect(x,jacc_matrwd[,y]))-1  
-    J <- I/(length(pmatch(c,na.omit(x)))+length(pmatch(c,na.omit(jacc_matrwd[,y])))-I)
-    J
-  })
-})
+
 
 
 
@@ -603,58 +590,9 @@ mldist9pop <- mldist_pop_list[[8]]
 
 new_popseq <- read.table("/biodata/dep_coupland/grp_korff/artem/scripts/ref_to_chrom_new_popseq")
 mldist9pop_chr <- merge(mldist9pop, new_popseq[,c(1,4)], by.x = "gene", by.y = "V1")
-mldist9pop_chr1 <- subset(mldist9pop_chr, V4 == 2 | V4 == 1)
-
-
-#a <- subset(mldist_pop_list[[8]], idd %in% "FT-226")
-#b$gene <- factor(b[,5], levels = a[order(a$pop, a$gene),]$gene)
 
 ## to plot sorted palettes 
-# c <- dcast(mldist9pop[,c(2,5,6)], gene ~ idd) ## for all
-
-c <- dcast(mldist9pop_chr[,c(1,3,6)], gene ~ idd) ## for chr1
-
-## temporary, to sample n random rows
-
-# q <- subset(c[order(c[,2]),], !is.na(`FT-226`)) 
-
-q <- c[order(c[,2]),]
 
 
-#d <- d[order(d[,2]),]
-d <- as.data.frame(apply(q,2, function(x){
-  x[is.na(x)] <- "unknown"
-  x
-}))
-
-#d <- d[,c(1:50)] # subset only n number of 
-
-# d <- sample_n(d, 100)
-
-
-length(d[1,])
-
-d$unknown <- apply(d, 1, function(x){
-  sum(str_count(unlist(x),"unknown")) / length(x)
-})
-
-d <- subset(d, unknown < 0.2)
-
-save(d, file = "/home/pankin/d.data")
-
-dev.off()  
-pushViewport(viewport(layout = grid.layout(nrow(d)+2, ncol(d)-1)))
-#pushViewport(viewport(layout = grid.layout(100, 10))) ## temporary, to plot only the subset of 100 lines, 10 genotypes
-
-
-invisible(lapply(seq(2,ncol(d)), function(y){ #ncol(d)
-  invisible(lapply(seq(1,nrow(d)), function(x){
-    f <-  d[x,c(1,y)]
-    colnames(f)[2] <- "pop"
-    e <- ggplot(data=f) + geom_rect(aes(xmin=1,xmax=2,ymin=1,ymax=2, fill=factor(pop))) +
-      scale_fill_manual(values=popcol) + blk_theme()
-    print(e, vp = viewport(layout.pos.row = c(x), layout.pos.col = c(y-1)))
-  }))
-}))
 
 ## END
