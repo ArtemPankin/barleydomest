@@ -383,8 +383,6 @@ invisible(lapply(seq(2,ncol(d)), function(y){
 
 ## END Figs. S13, S14 - plot unsorted and sorted ancestry palletes for all domesticated genotypes
 
-
-
 ## caclulating jaccard distances between domesticated genotypes & clustering
 
 excl <- c("FT-477","FT-494","FT-492","FT-489","FT-500","FT-478","FT-498","FT-502","FT-483","FT-493","FT-486","FT-488")
@@ -430,11 +428,8 @@ corr_matrd <- sapply(colnames(jacc_matrd[,c(2:length(jacc_matrd))]), function(y)
 a <- as.vector(corr_matrd)
 b <- as.vector(corr_matrn)
 
-as.numeric(corr_matr)
-
 c <- data.frame(val=as.numeric(as.vector(corr_matrd)), name=rep(c("dom"),length(as.vector(corr_matrd))))
 d <- data.frame(val=as.numeric(as.vector(corr_matrn)), name=rep(c("neutral"),length(as.vector(corr_matrn))))
-
 
 e <- rbind(c,d)     
 
@@ -445,12 +440,7 @@ ggplot(e, aes(x=val)) + geom_density(aes(colour=name, fill=name, y=..scaled..), 
   scale_colour_manual(values=c("#D95F02","#1B9E77")) +
   theme_bw()
 
-
-
-
 ### from hereafter - draft
-
-
 
 corr_matr_dist <- as.dist(corr_matr)
 
