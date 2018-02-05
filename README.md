@@ -1,4 +1,4 @@
-## Maria von Korff group (MPIPZ / HHU / CEPLAS) script repository
+## Script accompanying New Phytologist 2018 manusctipt
 
 **MODULE 1 (2 files) extracting putative ancestry of the domesticated genes using the Maxumum Likelihood distance approach**
 
