@@ -1,5 +1,3 @@
-#### This script generates Fig. 2de2de 
-####
 
 ## set number of populations K
 k=9
@@ -38,8 +36,8 @@ blk_theme <- function(){theme(
 
 ## load geo coordinates of wild accessions
 
-#wild_coord <- read.table("/netscratch/dep_coupland/grp_korff/artem/EIG5.0.2/final_struct_pca_ld/wild_no_adm90_coord_adj")
-wild_coord <- read.table("~/wild_coord") ## download file from GitHub repo
+
+wild_coord <- fread("wild_coord") ## download the file from GitHub repo
 colnames(wild_coord) <- c("id","lat","long")
 
 ## loading population colours
@@ -48,13 +46,11 @@ attributes(popcol) <- list(names=paste0("pop",c(1:9)))
 
 ## loading ML distance data; output of !!!.sh script
 
-mldist <- read.table("MLdist.data")
-
-#mldist <- read.table("/netscratch/dep_coupland/grp_korff/artem/EIG5.0.2/final_struct_pca_ld/phylogeny_all/gene_by_gene/distances/all.distances.coord")
+mldist <- fread("MLdist.data")
 
 ## adding names to the data.frame columns
 
-mldist <- mldist[,seq(3,6)]
+mldist <- mldist[,3:6]
 colnames(mldist) <- c("idd","idw","dist","gene")
 
 #### since the ML distance file is very large, 
@@ -86,7 +82,6 @@ mldist_minall <- mldist_minall[,seq(1,4)]
 ## data format: 1st col - genotype name; 2nd - (K+1) columns are membership coefficients
 
 dir=c("/path/to/dir/with/structure/files")
-# dir=c("/netscratch/dep_coupland/grp_korff/artem/EIG5.0.2/final_struct_pca_ld/CLUMPAK_fig_wild_no_adm90_478sampl.filtered.SNP.478samples.UG.genotyping.minN1.DP8.pcrerr5e-2.homo.wo_sing_0.05_0.5_0.99")
 
 ## read file names into the list; sort K as numeric, important if K >= 10
 strfi <- list.files(path=dir, pattern="*.out", full.names=T)
@@ -220,8 +215,8 @@ mldist_pop_list <- lapply(seq_along(mldist_pop_list), function(i){
 
 # loading map data from NaturalEarth
 
-pol <- tidy(readShapePoly("~/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp", IDvar="ADMIN"))
-ids <- read.dbf("~/ne_10m_admin_0_countries/ne_10m_admin_0_countries.dbf")
+pol <- tidy(readShapePoly("ne_10m_admin_0_countries.shp", IDvar="ADMIN"))
+ids <- read.dbf("ne_10m_admin_0_countries.dbf")
 pol$id <- as.factor(pol$id)
 dat <- merge(pol, ids, all.x=T, by.x="id", by.y="ADMIN")
 
@@ -287,11 +282,21 @@ ggplot(data= dat.sub_rev, aes(x=long,y=lat,group=group)) +
   geom_polygon(data=bas2000_sub, size=.05, colour= "#63afd9",fill ="#63afd9", alpha=0.8) +
   geom_polygon(data=bas3000_sub, size=.05, colour= "#4aa3d2",fill ="#4aa3d2", alpha=0.8) +
   geom_polygon(size=.1, colour= "darkgrey",fill ="#eee79f") +
-  geom_point(data=mldist_toplot, aes(y=lat, x=long, group="", size=V1, colour=pop), stroke = 0, alpha=.5) +
+  geom_point(data=mldist_toplot, aes(y=lat, x=long, group="", size=V1, colour=pop), 
+	     stroke = 0, alpha=.5) +
   scale_color_brewer(palette = "Set1") +
   geom_path(data=rivers_sub, aes(x=long, y=lat, group=id), colour="#A3C7CF", size=0.07) +
-  theme_bw() %+replace% theme(panel.background=element_rect(fill="#eee79f", colour=NA),legend.position="none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.ticks=element_blank(),axis.title.y = element_blank(), axis.text.y = element_blank(), axis.title.x=element_blank(), 
-                              axis.text.x = element_blank(), panel.border = element_blank(), axis.line = element_blank()) +
+  theme_bw() %+replace% theme(panel.background=element_rect(fill="#eee79f", colour=NA),
+			      legend.position="none", 
+			      panel.grid.major = element_blank(), 
+			      panel.grid.minor = element_blank(), 
+			      axis.ticks=element_blank(),
+			      axis.title.y = element_blank(), 
+			      axis.text.y = element_blank(), 
+			      axis.title.x=element_blank(),
+			      axis.text.x = element_blank(), 
+			      panel.border = element_blank(), 
+			      axis.line = element_blank()) +
   scale_y_continuous(expand = c(0,0)) +
   scale_x_continuous(expand = c(0,0))
 
@@ -301,7 +306,7 @@ ggplot(data= dat.sub_rev, aes(x=long,y=lat,group=group)) +
 
 ## load selection scan outliers; see plot_selection_scans.R script
 
-alloutid <- read.table(file = "/biodata/dep_coupland/grp_korff/artem/scripts_git/korffgroup/alloutid")$x
+alloutid <- fread(file = "alloutid")$x
 
 ## extract ancestral haplotypes for domestication loci
 
@@ -328,8 +333,10 @@ mldist_pop_8_all_neut <- ddply(mldist_pop_8_all_neut, c("gene"), function(x){
 ## plot
 
 ggplot() + 
-  geom_density(data= mldist_pop_8_all_neut, aes(x=long, y=..scaled..),colour="#1B9E77", fill = "#1B9E77", alpha=.1, size=.5, adjust=.1) + 
-  geom_density(data= mldist_domest_loci, aes(x=long, y=..scaled..), colour="#D95F02", fill = "#D95F02",  alpha=.1, size=.5, adjust=.1) + 
+  geom_density(data= mldist_pop_8_all_neut, aes(x=long, y=..scaled..),
+	       colour="#1B9E77", fill = "#1B9E77", alpha=.1, size=.5, adjust=.1) + 
+  geom_density(data= mldist_domest_loci, aes(x=long, y=..scaled..), 
+	       colour="#D95F02", fill = "#D95F02",  alpha=.1, size=.5, adjust=.1) + 
   theme_bw()
 
 ### END Fig. 4b - longitudinal distribution of wild ancestral haplotypes
@@ -343,7 +350,19 @@ ggplot(subset(mldist_pop_list[[8]],gene %in% alloutid)[,c(2,6)],aes(x=1)) +
   facet_grid(~idd) +
   scale_fill_manual(values=popcol) +
   scale_y_continuous(labels= percent) +
-  theme_bw() %+replace% theme(strip.text.x = element_text(size=9,angle=90),strip.background = element_blank(), panel.background=element_rect(fill="transparent", colour=NA),legend.position="right", panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.ticks.x=element_blank(),axis.title.y = element_blank(), axis.text.y = element_text(), axis.title.x=element_blank(), axis.text.x = element_blank(), panel.border = element_blank(), axis.line.x = element_blank())
+  theme_bw() %+replace% theme(strip.text.x = element_text(size=9,angle=90),
+			      strip.background = element_blank(), 
+			      panel.background=element_rect(fill="transparent", colour=NA),
+			      legend.position="right", 
+			      panel.grid.major = element_blank(), 
+			      panel.grid.minor = element_blank(), 
+			      axis.ticks.x=element_blank(),
+			      axis.title.y = element_blank(), 
+			      axis.text.y = element_text(), 
+			      axis.title.x=element_blank(), 
+			      axis.text.x = element_blank(),
+			      panel.border = element_blank(), 
+			      axis.line.x = element_blank())
 
 ## plot sorted palettes Fig. S14 (only the loci with with < 20% of unknown ancestry across the accessions)
 
@@ -433,156 +452,13 @@ d <- data.frame(val=as.numeric(as.vector(corr_matrn)), name=rep(c("neutral"),len
 
 e <- rbind(c,d)     
 
-ggplot(e, aes(x=val)) + geom_density(aes(colour=name, fill=name, y=..scaled..), alpha=.4, size=1, adjust=2) + 
-  geom_vline(xintercept=med_d, colour=c("#D95F02"), linetype="dashed", size=1) +
-  geom_vline(xintercept=med_wd, colour=c("#1B9E77"), linetype="dashed", size=1) +
-  scale_fill_manual(values=c("#D95F02","#1B9E77")) +
-  scale_colour_manual(values=c("#D95F02","#1B9E77")) +
-  theme_bw()
-
-### from hereafter - draft
-
-corr_matr_dist <- as.dist(corr_matr)
-
-a <- hclust(corr_matr_dist)
-b <- cmdscale(corr_matr_dist)
-
-plot(a)
-plot(b)
-
-
-corr_matr[c("M-45"),c("FT-495")]
-
-
-
-test <- heatmap.2(corr_matr, trace="none")
-corr_matr[rev(test$rowInd),test$colInd]
-
-corr_df <- as.data.frame(corr_matr)
-corr_df$id <- row.names(corr_matr)
-
-# END all
-
-
-
-y <- colnames(jacc_matrd[,2:3])[1]
-x <- jacc_matrd[,3]
-
-
-
-
-
-
-
-ggplot(data = 
-         as.data.frame(prcomp(corr_matrd, scale. =T)$x), 
-       aes(x=PC1, y= PC2)) + geom_point()
-
-
-med_d <- median(as.vector(as.dist(corr_matrd)))
-
-heatmap.2(corr_matrd, trace="none")
-
-boxplot(as.vector(as.dist(corr_matrd)))
-
-corr_matr_distd <- as.dist(corr_matrd)
-a <- hclust(corr_matr_distd)
-b <- cmdscale(corr_matr_distd)
-
-plot(a)
-plot(b)
-
-
-heatmap(corr_matrd)
-
-corr_df <- as.data.frame(corr_matr)
-corr_df$id <- row.names(corr_matr)
-
-ggplot(data= melt(corr_df), aes(x=id, y = variable, fill=value)) + geom_tile()
-
-# END domestication loci
-
-# without domestication loci
-jacc_matrwd <- subset(mldist_pop_list[[8]], ! gene %in% alloutid)
-jacc_matrwd$id2 <- paste0(jacc_matrwd$gene,"_",jacc_matrwd$pop)
-#jacc_matrwd <- jacc_matrwd[sample(1:20224,2389),]
-jacc_matrwd <- dcast(jacc_matrwd[,c(2,5,8)], gene ~ idd) 
-#jacc_matrwd <- jacc_matrwd[sample(1:1141,91),]
-jacc_matrwd <- jacc_matrwd[, ! colnames(jacc_matrwd) %in% excl]
-
-head(jacc_matrwd)
-
-nrow(jacc_matrwd)
-
-
-
-
-heatmap.2(corr_matrwd, trace="none",Rowv=T)
-
-med_wd <- median(as.vector(as.dist(corr_matrwd)))
-
-corr_medians <- sapply(seq(1:100),function(z){
-  jacc_matrwd <- subset(mldist_pop_list[[8]], ! gene %in% alloutid)
-  jacc_matrwd$id2 <- paste0(jacc_matrwd$gene,"_",jacc_matrwd$pop)
-  #jacc_matrwd <- jacc_matrwd[sample(1:20224,2389),]
-  jacc_matrwd <- dcast(jacc_matrwd[,c(2,5,8)], gene ~ idd) 
-  jacc_matrwd <- jacc_matrwd[sample(1:1141,91),]
-  jacc_matrwd <- jacc_matrwd[, ! colnames(jacc_matrwd) %in% excl]
-  corr_matrwd <- sapply(colnames(jacc_matrwd[,c(2:length(jacc_matrwd))]), function(y){
-    Y <- apply(jacc_matrwd[,c(2:length(jacc_matrwd))], 2, function(x){
-      a <- gsub("_pop[0-9]", "",na.omit(jacc_matrwd[,y]))
-      b <- gsub("_pop[0-9]", "",na.omit(x))
-      c <- intersect(a,b)
-      I <- length(intersect(x,jacc_matrwd[,y]))-1  
-      J <- I/(length(pmatch(c,na.omit(x)))+length(pmatch(c,na.omit(jacc_matrwd[,y])))-I)
-      J
-    })
-  })
-  med <- median(as.vector(as.dist(corr_matrwd)))
-  med
-}, simplify = T)
-
-
-ggplot(data=as.data.frame(corr_medians), aes(x=1.75,y=corr_medians)) + geom_boxplot(width=.5) + geom_point(position=position_jitter(width=.1)) +
-  geom_segment(aes(x=1, xend=1.5,y=med_wd,yend=med_wd)) + theme_bw() +
-  geom_segment(aes(x=0.5, xend=1, y=med_d, yend=med_d)) +
-  xlab(label="Domesticated loci (91) / W/o domesticated loci (1141) / 100 x 91 W/o domesticated") +
-  ylab(label="Ancestry similarity") +
-  ylim(0.5,1)
-
-corr_matr_distwd <- as.dist(corr_matrwd)
-a <- hclust(corr_matr_distwd)
-b <- cmdscale(corr_matr_distwd, k=2)
-
-plot(a)
-plot(b)
-
-corr_dfwd <- as.data.frame(corr_matrwd)
-corr_dfwd$id <- row.names(corr_matrwd)
-
-ggplot(data= melt(corr_dfd), aes(x=id, y = variable, fill=value)) + geom_tile()
-
-# END without domestication loci
-
-a <- heatmap.2(corr_matr, trace="none")
-b <- heatmap.2(corr_matrd, trace="none")
-c <- heatmap.2(corr_matrwd, trace="none")
-
-densityplot(subset (mldist_pop_list[[8]],  ! gene %in% alloutid)$dist)
-
-
-
-
-## set factor levels so that the populations remain in the same order
-
-
-mldist9pop <- mldist_pop_list[[8]]
-
-new_popseq <- read.table("/biodata/dep_coupland/grp_korff/artem/scripts/ref_to_chrom_new_popseq")
-mldist9pop_chr <- merge(mldist9pop, new_popseq[,c(1,4)], by.x = "gene", by.y = "V1")
-
-## to plot sorted palettes 
-
-
-
-## END
+ggplot(data = e, aes(x=val)) + 
+	geom_density(aes(colour=name, fill=name, y=..scaled..), 
+				     alpha=.4, size=1, adjust=2) + 
+	geom_vline(xintercept=med_d, colour=c("#D95F02"), 
+	     linetype="dashed", size=1) +
+	geom_vline(xintercept=med_wd, colour=c("#1B9E77"), 
+	     linetype="dashed", size=1) +
+	scale_fill_manual(values=c("#D95F02","#1B9E77")) +
+ 	scale_colour_manual(values=c("#D95F02","#1B9E77")) +
+	theme_bw()

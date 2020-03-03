@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -euxo pipefail
+
 # This scripts calculates numeric stats for each SNP
 
 # output 10 columns: conitg	position	missing_count	reference_count	heterozygous_count	homozygous_count	heterozygous_fraction	missing_fraction	hom_het_fraction	homozygous_fraction

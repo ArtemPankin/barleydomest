@@ -1,4 +1,6 @@
-## BASH script
+#!/bin/sh
+
+set -euxo pipefail
 
 ## This script performs Illumina read filtering, mapping and SNP calling and filtering
 

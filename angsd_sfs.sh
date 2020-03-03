@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -euxo pipefail
+
 ## angsd to calculate minor allele frequency (MAF) spectrum
 
 ## may require a lot of RAM!!! (up to 100 Gb)  
@@ -10,7 +12,7 @@
 
 
 
-	./angsd -bam ${1} -doSaf 1 -out output -anc reference_genome_23408contigs.fa -GL 2 -fold 1 -minMapQ 1
+	./angsd -bam ${1} -doSaf 1 -out output -anc reference_genome_23408contigs.fa -GL 2 -fold 1 -minMapQ 1 &&
 
 	./realSFS output.saf.idx -maxIter 100 -P 10 > output.sfs
 

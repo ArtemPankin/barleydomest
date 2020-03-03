@@ -1,11 +1,12 @@
 #!/bin/sh
 
+set -euxo pipefail
+
 ## This scripts calculates pairwise ML distances between each reference targets (1st column of vcf), genes and contigs in this case
 ## Sofware in the bin path: raxmlHPC-SSE3
 ## File 'wild_dom_no_adm90' (available on github) should be in the folder
 ## It generates an input file for the 'gene_ancestry.R' script
 ## Usage: bash gene ancestry_raxml.sh input.vcf
-
 
 # extract fasta files for each gene > 20 SNPs
 
