@@ -1,4 +1,4 @@
-## Scripts accompanying New Phytologist 2018 manusctipt
+## Scripts accompanying Pankin et al. New Phytologist 2018 manusctipt ( https://doi.org/10.1111/nph.15077)
 
 **MODULE 1 (2 files) extracting putative ancestry of the domesticated genes using the Maxumum Likelihood distance approach**
 
